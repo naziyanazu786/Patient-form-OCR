@@ -6,40 +6,42 @@ class DataParser:
     def __init__(self):
         self.patterns = {
             # Patient Details
-            'name': r'Name[:\s]*([A-Za-z\s]+)',
-            'dob': r'DOB[:\s]*(\d{2}[-/]\d{2}[-/]\d{4})',
+            'name': r'Patient Name\s*:\s*([A-Za-z\s]+)',
+            'dob': r'DOB\s*:\s*(\d{1,2}/\d{1,2}/\d{2,4})',
             
             # Treatment Details
-            'date': r'Date[:\s]*(\d{2}[-/]\d{2}[-/]\d{4})',
-            'injection': r'Injection[:\s]*(Yes|No)',
-            'exercise_therapy': r'Exercise Therapy[:\s]*(Yes|No)',
+            'injection': r'INJECTION\s*:\s*(YES|NO)',
+            'exercise_therapy': r'Exercise Therapy\s*:\s*(YES|NO)',
             
-            # Difficulty Ratings
-            'bending': r'Bending[:\s]*(\d)',
-            'putting_on_shoes': r'Putting on Shoes[:\s]*(\d)',
-            'sleeping': r'Sleeping[:\s]*(\d)',
+            # Difficulty Ratings (0-5)
+            'bending': r'Bending or Stooping:\s*([0-5])',
+            'putting_on_shoes': r'Putting on shoes:\s*([0-5])',
+            'sleeping': r'Sleeping:\s*([0-5])',
+            'standing': r'Standing for an hour:\s*([0-5])',
+            'stairs': r'Going up or down a flight of stairs:\s*([0-5])',
+            'walking': r'Walking through a store:\s*([0-5])',
+            'driving': r'Driving for an hour:\s*([0-5])',
+            'meal_prep': r'Preparing a meal:\s*([0-5])',
+            'yard_work': r'Yard work:\s*([0-5])',
+            'picking_up': r'Picking up items off the floor:\s*([0-5])',
             
             # Patient Changes
-            'since_last_treatment': r'Since Last Treatment[:\s]*(Good|Not Good|Better|Worse)',
-            'since_start': r'Since Start of Treatment[:\s]*(Better|Worse|Same)',
-            'last_3_days': r'Last 3 Days[:\s]*(Good|Bad)',
+            'since_last_treatment': r'Patient Changes since last treatment:\s*(.*?)(?=Patient|$)',
+            'since_start': r'Patient changes since the start of treatment:\s*(.*?)(?=Describe|$)',
+            'last_3_days': r'Describe any functional changes within the last three days \(good or bad\):\s*(.*?)(?=Rate|$)',
             
-            # Pain Symptoms
-            'pain': r'Pain Level[:\s]*(\d{1,2})',
-            'numbness': r'Numbness[:\s]*(\d{1,2})',
-            'tingling': r'Tingling[:\s]*(\d{1,2})',
-            'burning': r'Burning[:\s]*(\d{1,2})',
-            'tightness': r'Tightness[:\s]*(\d{1,2})',
+            # Pain Symptoms (0-10)
+            'pain': r'Pain:\s*(\d{1,2})',
+            'numbness': r'Numbness:\s*(\d{1,2})',
+            'tingling': r'Tingling:\s*(\d{1,2})',
+            'burning': r'Burning:\s*(\d{1,2})',
+            'tightness': r'Tightness:\s*(\d{1,2})',
             
             # Medical Assistant Data
-            'blood_pressure': r'BP[:\s]*(\d{2,3}/\d{2,3})',
-            'hr': r'HR[:\s]*(\d{2,3})',
-            'weight': r'Weight[:\s]*(\d{2,3}(?:\.\d)?)',
-            'height': r'Height[:\s]*(\d\'(?:\d{1,2})?\"?)',
-            'spo2': r'SpO2[:\s]*(\d{2,3})',
-            'temperature': r'Temperature[:\s]*((?:\d{2,3}(?:\.\d)?)|(?:\d{1,2}(?:\.\d)?))',
-            'blood_glucose': r'Blood Glucose[:\s]*(\d{2,3})',
-            'respirations': r'Respirations[:\s]*(\d{1,2})'
+            'blood_pressure': r'Blood Pressure:\s*(\d{2,3}/\d{2,3})',
+            'hr': r'HR:\s*(\d{2,3})',
+            'weight': r'Weight:\s*(\d{2,3}(?:\.\d)?)',
+            'height': r'Height:\s*(\d\'(?:\d{1,2})?\"?)',
         }
 
     def extract_field(self, text, pattern):
@@ -52,14 +54,20 @@ class DataParser:
         data = {
             'patient_name': self.extract_field(text, self.patterns['name']),
             'dob': self.extract_field(text, self.patterns['dob']),
-            'date': self.extract_field(text, self.patterns['date']),
             'injection': self.extract_field(text, self.patterns['injection']),
             'exercise_therapy': self.extract_field(text, self.patterns['exercise_therapy']),
             
             'difficulty_ratings': {
                 'bending': self.extract_field(text, self.patterns['bending']),
                 'putting_on_shoes': self.extract_field(text, self.patterns['putting_on_shoes']),
-                'sleeping': self.extract_field(text, self.patterns['sleeping'])
+                'sleeping': self.extract_field(text, self.patterns['sleeping']),
+                'standing': self.extract_field(text, self.patterns['standing']),
+                'stairs': self.extract_field(text, self.patterns['stairs']),
+                'walking': self.extract_field(text, self.patterns['walking']),
+                'driving': self.extract_field(text, self.patterns['driving']),
+                'meal_prep': self.extract_field(text, self.patterns['meal_prep']),
+                'yard_work': self.extract_field(text, self.patterns['yard_work']),
+                'picking_up': self.extract_field(text, self.patterns['picking_up'])
             },
             
             'patient_changes': {
@@ -80,11 +88,7 @@ class DataParser:
                 'blood_pressure': self.extract_field(text, self.patterns['blood_pressure']),
                 'hr': self.extract_field(text, self.patterns['hr']),
                 'weight': self.extract_field(text, self.patterns['weight']),
-                'height': self.extract_field(text, self.patterns['height']),
-                'spo2': self.extract_field(text, self.patterns['spo2']),
-                'temperature': self.extract_field(text, self.patterns['temperature']),
-                'blood_glucose': self.extract_field(text, self.patterns['blood_glucose']),
-                'respirations': self.extract_field(text, self.patterns['respirations'])
+                'height': self.extract_field(text, self.patterns['height'])
             }
         }
         
@@ -108,12 +112,6 @@ class DataParser:
             ma_data['hr'] = int(ma_data['hr'])
         if ma_data['weight']:
             ma_data['weight'] = float(ma_data['weight'])
-        if ma_data['spo2']:
-            ma_data['spo2'] = int(ma_data['spo2'])
-        if ma_data['blood_glucose']:
-            ma_data['blood_glucose'] = int(ma_data['blood_glucose'])
-        if ma_data['respirations']:
-            ma_data['respirations'] = int(ma_data['respirations'])
         
         return data
 
